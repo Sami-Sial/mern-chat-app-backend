@@ -27,22 +27,20 @@ const sendMessage = async (req, res, next) => {
   let newMessage = {};
 
   if (req.file) {
-    if (req.file.mimetype == ("image/jpeg" || "image/png" || "image/jpg")) {
-      newMessage.msgType = "image";
+    if (req.file.mimetype.startsWith("image/")) {
+      newMessage.msgType = "Image";
       newMessage.content = req.file.path;
-    } else if (
-      req.file.mimetype == ("video/mp4" || "video/webm" || "video/mkv")
-    ) {
-      newMessage.msgType = "video";
+    } else if (req.file.mimetype.startsWith("video/")) {
+      newMessage.msgType = "Video";
       newMessage.content = req.file.path;
-    } else if (
-      req.file.mimetype ==
-      ("audio/mpeg" || "audio/ogg" || "audio/wav" || "audio/mp3")
-    ) {
-      newMessage.msgType = "audio";
+    } else if (req.file.mimetype.startsWith("audio/")) {
+      newMessage.msgType = "Audio";
+      newMessage.content = req.file.path;
+    } else if (req.file.mimetype.startsWith("application/")) {
+      newMessage.msgType = "Document";
       newMessage.content = req.file.path;
     } else {
-      return next(new ExpressError(400, "This file type not supported"));
+      return next(new ExpressError(500, "Error sending file"));
     }
 
     newMessage.chat = chatId;

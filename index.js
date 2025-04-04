@@ -34,6 +34,7 @@ const userRoutes = require("./routes/user.routes");
 const chatRoutes = require("./routes/chat.routes");
 const messageRoutes = require("./routes/message.routes");
 const zegoTokenRoutes = require("./routes/zegoToken.routes");
+const User = require("./models/user.model");
 
 app.use("/api/user", userRoutes);
 app.use("/api/chats", chatRoutes);
@@ -68,6 +69,14 @@ io.on("connection", (socket) => {
 
   socket.on("add_online_user", (userId) => {
     onLineUsers[userId] = userId;
+    console.log("online users", onLineUsers);
+    io.emit("online_users", onLineUsers);
+  });
+
+  socket.on("remove_online_user", (userId) => {
+    delete onLineUsers[userId];
+    console.log("remove online use", onLineUsers);
+    io.emit("update_online_users", onLineUsers);
   });
 
   socket.on("setup", (userData) => {
@@ -78,7 +87,6 @@ io.on("connection", (socket) => {
   socket.on("join chat", (room) => {
     socket.join(room);
     console.log(onLineUsers);
-    socket.emit("online_users", onLineUsers);
     console.log("User joined room : " + room);
   });
 
@@ -127,7 +135,6 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
-    console.log(socket.id);
   });
 
   // socket.off("setup", () => {
