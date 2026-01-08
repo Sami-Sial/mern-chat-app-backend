@@ -3,9 +3,6 @@ const User = require("../models/user.model");
 const ExpressError = require("../utils/ExpressError");
 
 const isLoggedIn = async (req, res, next) => {
-  console.log(req.headers?.authorization?.length);
-  console.log(req.headers?.authorization);
-
   let token;
   if (
     req.headers?.authorization?.startsWith("Bearer") &&
