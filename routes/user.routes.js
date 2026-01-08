@@ -9,12 +9,14 @@ const {
   registerUser,
   loginUser,
   allUsers,
-  logout,
+  getLoggedInUser,
+  updatePassword
 } = require("../controllers/user.controllers");
 
 router.post("/signup", upload.single("pic"), registerUser);
 router.post("/login", loginUser);
-router.get("/logout", logout);
 router.get("/all-users", isLoggedIn, allUsers);
+router.get("/me", isLoggedIn, getLoggedInUser);
+router.put("/update-password", isLoggedIn, updatePassword);
 
 module.exports = router;

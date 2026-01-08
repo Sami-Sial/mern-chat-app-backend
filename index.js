@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const app = express();
 const cors = require("cors");
-// const { Server } = require("socket.io");
 
 // data parsing
 app.use(
@@ -33,13 +32,11 @@ connectDB()
 const userRoutes = require("./routes/user.routes");
 const chatRoutes = require("./routes/chat.routes");
 const messageRoutes = require("./routes/message.routes");
-const zegoTokenRoutes = require("./routes/zegoToken.routes");
 const User = require("./models/user.model");
 
 app.use("/api/user", userRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/message", messageRoutes);
-app.use("/api", zegoTokenRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

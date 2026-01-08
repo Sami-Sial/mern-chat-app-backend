@@ -11,10 +11,10 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
     let folder = "whatsapp";
-    let resourceType = "auto"; // Default
+    let resourceType = "auto";
     let format;
 
-    // 🔹 Check File Type
+    // 🔹 Check file type
     if (file.mimetype.startsWith("image/")) {
       resourceType = "image";
       format = "png";
@@ -22,19 +22,28 @@ const storage = new CloudinaryStorage({
       resourceType = "video";
       format = "mp4";
     } else if (file.mimetype.startsWith("audio/")) {
-      resourceType = "video";
+      resourceType = "video"; // Cloudinary handles audio under 'video'
       format = "mp3";
     } else if (file.mimetype === "application/pdf") {
-      resourceType = "raw"; // PDFs must be uploaded as 'raw'
+      resourceType = "raw";
       format = "pdf";
+    } else if (
+      file.mimetype === "application/zip" ||
+      file.mimetype === "application/x-zip-compressed"
+    ) {
+      resourceType = "raw";
+      format = "zip";
+    } else if (file.mimetype === "text/plain") {
+      resourceType = "raw";
+      format = "txt";
     } else {
-      resourceType = "raw"; // Fallback for other file types
+      resourceType = "raw";
     }
 
     return {
-      folder: folder,
+      folder,
       resource_type: resourceType,
-      format: format,
+      format,
       type: "upload",
     };
   },

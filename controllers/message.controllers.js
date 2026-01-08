@@ -27,25 +27,42 @@ const sendMessage = async (req, res, next) => {
   let newMessage = {};
 
   if (req.file) {
-    if (req.file.mimetype.startsWith("image/")) {
+    const mime = req.file.mimetype;
+
+    if (mime.startsWith("image/")) {
       newMessage.msgType = "Image";
       newMessage.content = req.file.path;
-    } else if (req.file.mimetype.startsWith("video/")) {
+    } else if (mime.startsWith("video/")) {
       newMessage.msgType = "Video";
       newMessage.content = req.file.path;
-    } else if (req.file.mimetype.startsWith("audio/")) {
+    } else if (mime.startsWith("audio/")) {
       newMessage.msgType = "Audio";
       newMessage.content = req.file.path;
-    } else if (req.file.mimetype.startsWith("application/")) {
+    } else if (mime === "application/pdf") {
+      newMessage.msgType = "PDF";
+      newMessage.content = req.file.path;
+    } else if (
+      mime === "application/zip" ||
+      mime === "application/x-zip-compressed"
+    ) {
+      newMessage.msgType = "ZIP";
+      newMessage.content = req.file.path;
+    } else if (mime === "text/plain") {
+      newMessage.msgType = "TextFile";
+      newMessage.content = req.file.path;
+    } else if (mime.startsWith("application/")) {
+      // For Word, Excel, PowerPoint, etc.
       newMessage.msgType = "Document";
       newMessage.content = req.file.path;
     } else {
-      return next(new ExpressError(500, "Error sending file"));
+      return next(new ExpressError(400, "Unsupported file type"));
     }
 
+    // ✅ Common properties for messages with files
     newMessage.chat = chatId;
     newMessage.sender = req.user._id;
   } else {
+    // ✅ For plain text messages
     newMessage.sender = req.user._id;
     newMessage.content = content;
     newMessage.chat = chatId;

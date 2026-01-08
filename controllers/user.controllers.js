@@ -7,7 +7,7 @@ const asyncErrorHandler = require("../utils/wrapAsync");
 
 // Register user
 const registerUser = asyncErrorHandler(async (req, res, next) => {
-  console.log(req.file);
+  console.log("file", req.file);
   let { name, email, password } = req.body;
 
   if (!name || !email || !password) {
@@ -27,16 +27,22 @@ const registerUser = asyncErrorHandler(async (req, res, next) => {
 
   const saveUser = async (hashedPassword) => {
     password = hashedPassword;
-    const user = new User({ name, email, password });
-    const savedUser = await user.save();
+    const newUser = new User({ name, email, password, pic: req.file.path });
+    const user = await newUser.save();
 
     if (user) {
       let token = generateToken(user._id);
-      res.status(200).json({ savedUser, token });
+      res.status(200).json({ user, token });
     } else {
       return next(new ExpressError(400, "Failed to create User."));
     }
   };
+});
+
+// Get Logged In user Info
+const getLoggedInUser = asyncErrorHandler(async (req, res, next) => {
+  let user = req.user;
+  res.status(200).json({ user });
 });
 
 // Login user
@@ -70,40 +76,73 @@ const loginUser = asyncErrorHandler(async (req, res, next) => {
   };
 });
 
-const logout = asyncErrorHandler(async (req, res, next) => {
-  // res.cookie("token", null, {
-  //   expires: new Date(Date.now()),
-  //   httpOnly: true,
-  // });
-
-  res.status(200).json({
-    success: true,
-    message: "Logged Out Successfully",
-  });
-});
 
 // All users
 const allUsers = asyncErrorHandler(async (req, res) => {
-  let keyword = req.query.search
+  const keyword = req.query.search
     ? {
-        $or: [
-          { name: { $regex: req.query.search, $options: "i" } },
-          { email: { $regex: req.query.search, $options: "i" } },
-        ],
-      }
+      $or: [
+        { name: { $regex: req.query.search, $options: "i" } },
+        { email: { $regex: req.query.search, $options: "i" } },
+      ],
+    }
     : {};
 
-  let users = await User.find(keyword);
-  users = users.filter((user) => {
-    return user._id !== req.user._id;
+  const users = await User.find({
+    ...keyword,
+    _id: { $ne: req.user._id },   // exclude current logged-in user
   });
 
   res.send(users);
+});
+
+
+const updatePassword = asyncErrorHandler(async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user._id;
+
+    if (!currentPassword || !newPassword) {
+      return next(
+        new ExpressError(400, "Current and new password are required.")
+      );
+    }
+
+    // 1. Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(new ExpressError(404, "User not found."));
+    }
+
+    // 2. Compare current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return next(new ExpressError(400, "Current password is incorrect."));
+    }
+
+    // 3. Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // 4. Update password
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully.",
+    });
+
+  } catch (error) {
+    console.error("Password update error:", error);
+    return next(new ExpressError(500, "Internal server error."));
+  }
 });
 
 module.exports = {
   registerUser,
   loginUser,
   allUsers,
-  logout,
+  getLoggedInUser,
+  updatePassword
 };

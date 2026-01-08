@@ -16,9 +16,15 @@ const isLoggedIn = async (req, res, next) => {
     return next(new ExpressError(401, "Please Login to access this Resource"));
   }
 
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
-  req.user = await User.findById(decodedData.id);
-  next();
+  try {
+    const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decodedData.id);
+    next();
+  } catch (error) {
+    console.log(error.message, error.name);
+
+    return next(new ExpressError(401, error));
+  }
 };
 
 const fieldsChecking = async (req, res, next) => {

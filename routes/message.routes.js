@@ -4,7 +4,6 @@ const { isLoggedIn } = require("../middlewares/middleware");
 const {
   sendMessage,
   allMessages,
-  uploadFile,
 } = require("../controllers/message.controllers");
 const multer = require("multer");
 const { storage } = require("../cloudinary.config");

@@ -101,6 +101,7 @@ const createGroupChat = async (req, res, next) => {
       users: users,
       isGroupChat: true,
       groupAdmin: req.user,
+      groupPic: req.file && req.file.path,
     });
     const groupChat = await groupChatData.save();
     const fullGroupChat = await Chat.findOne({ _id: groupChat._id })
